@@ -133,3 +133,4 @@ Keys.py
 
 # Data files
 *.csv
+*.tsv
