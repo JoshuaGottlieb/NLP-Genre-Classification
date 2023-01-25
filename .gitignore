@@ -134,3 +134,5 @@ Keys.py
 # Data files
 *.csv
 *.tsv
+X_train_gensim.pickle
+X_test_gensim.pickle
