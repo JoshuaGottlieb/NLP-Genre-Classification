@@ -16,7 +16,14 @@ import pyLDAvis.gensim_models
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.manifold import TSNE
+import scipy
+from scipy.sparse import csr_matrix
 from joblib import parallel_backend
+
+def convert_dataframe_to_sparse(df):
+    sparse_matrix = csr_matrix(df.astype(pd.SparseDtype("float64",0)).sparse.to_coo())
+    
+    return sparse_matrix
 
 def obtain_gensim_bag_of_words(X_train, X_test, no_below = 5, no_above = 0.95):
     with parallel_backend('loky', n_jobs = -1):
