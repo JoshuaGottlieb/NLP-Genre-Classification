@@ -7,26 +7,23 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.manifold import TSNE
 from joblib import parallel_backend
 
-def vectorize_data(df, vectorizer, vectorizer_args = None, additional_features = False,
-                    min_samples = 0, test_size = 0.25, random_state = 42):
+def vectorize_data(X_train, X_test, y_train, y_test,
+                   vectorizer, vectorizer_args = None, additional_features = False,
+                   min_samples = 0, test_size = 0.25, random_state = 42):
     genres_to_keep = df.genre_name.value_counts()[df.genre_name.value_counts() > min_samples].index.values.tolist()
     vtr = vectorizer
     if vectorizer_args is not None:
         vtr.set_params(**vectorizer_args)
     df = df.loc[df.genre_name.isin(genres_to_keep)].copy()
-    X_columns = ['lyrics']
-    
-    if additional_features:
-        df['average_token_length'] = df.lyrics.apply(lambda x: np.array([len(i) for i in x]).sum() / len(x))
-        df['num_tokens'] = df.lyrics.apply(lambda x: len(x))
-        X_columns = X_columns + ['num_tokens', 'average_token_length']
         
-    df.lyrics = df.lyrics.str.join(' ')
-    
-    X = df[X_columns]
-    y = df.genre_name
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state = random_state)
+    if additional_features:
+        X_train['average_token_length'] = X_train.lyrics.apply(lambda x: np.array([len(i) for i in x]).sum() / len(x))
+        X_test['average_token_length'] = X_test.lyrics.apply(lambda x: np.array([len(i) for i in x]).sum() / len(x))
+        X_train['num_tokens'] = X_train.lyrics.apply(lambda x: len(x))
+        X_test['num_tokens'] = X_test.lyrics.apply(lambda x: len(x))
+        
+    X_train.lyrics = X_train.lyrics.str.join(' ')
+    X_test.lyrics = X_test.lyrics.str.join(' ')
     
     with parallel_backend('loky', n_jobs = -1):
         X_train = pd.concat([pd.DataFrame(vtr.fit_transform(X_train.lyrics).todense(), index = X_train.index),
@@ -37,7 +34,7 @@ def vectorize_data(df, vectorizer, vectorizer_args = None, additional_features =
     return X_train, X_test, y_train, y_test, vtr    
 
 def perform_tsne_analysis(X_train, X_test, y_train, y_test, random_state = 42, learning_rate = 100,
-                          pickle = False, pickle_dest = None, plot = False):
+                          pickle_ = False, pickle_dest = None, plot = False):
     
     tsne = TSNE(random_state = random_state, learning_rate = learning_rate)
     
@@ -54,7 +51,7 @@ def perform_tsne_analysis(X_train, X_test, y_train, y_test, random_state = 42, l
         plt.title('Visualization of Genres')
         plt.show()
         
-    if pickle:
+    if pickle_:
             if pickle_dest is None:
                 print('No pickle destination given, pickling skipped.')
             else:
