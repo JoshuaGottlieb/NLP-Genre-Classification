@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from gensim.models import nmf, ldamodel
 import gensim.models.phrases
-from gensim.matutils import corpus2dense
+from gensim.matutils import corpus2dense, corpus2csc, Sparse2Corpus
 from gensim.corpora.dictionary import Dictionary
 from gensim.models.phrases import Phrases
 from gensim.models import Nmf
@@ -20,32 +20,55 @@ import scipy
 from scipy.sparse import csr_matrix
 from joblib import parallel_backend
 
-def convert_dataframe_to_sparse(df):
-    sparse_matrix = csr_matrix(df.astype(pd.SparseDtype("float64",0)).sparse.to_coo())
+def sparse_gensim_to_dataframe(sparse_bow, dictionary, index, documents_columns = True):
+    frame_bow = pd.DataFrame(corpus2dense(Sparse2Corpus(sparse_bow, documents_columns = documents_columns),
+                                          num_terms = len(dictionary.token2id)).T,
+                             columns = list(dictionary.values()), index = index)
     
-    return sparse_matrix
+    return frame_bow
 
-def obtain_gensim_bag_of_words(X_train, X_test, no_below = 5, no_above = 0.95):
-    with parallel_backend('loky', n_jobs = -1):
-        X_train_corpus = list(X_train.lyrics.apply(lambda x: list(x)).values)
-        bigram_model = Phrases(X_train_corpus)
-        X_train['bigrams'] = X_train.apply(lambda x: bigram_model[x])
-        X_train_bigram_corpus = list(X_train.bigrams.apply(lambda x: list(x)).values)
-        dct = Dictionary(X_train_bigram_corpus)
-        dct.filter_extremes(no_below = no_below, no_above = no_above)
-        X_train_bigram_corpus_tokenized = [dct.doc2bow(x) for x in X_train_bigram_corpus]
-        X_train_bow = pd.DataFrame(corpus2dense(X_train_bigram_corpus_tokenized,
-                                                num_terms = len(dct.token2id)).T,
-                                   columns = list(dct.values()), index = X_train.index)
-        
-        X_test['bigrams'] = X_test.apply(lambda x: bigram_model[x])
-        X_test_bigram_corpus = list(X_test.bigrams.apply(lambda x: list(x)).values)
-        X_test_bigram_corpus_tokenized = [dct.doc2bow(x) for x in X_test_bigram_corpus]
-        X_test_bow = pd.DataFrame(corpus2dense(X_test_bigram_corpus_tokenized,
-                                               num_terms = len(dct.token2id)).T,
-                                  columns = list(dct.values()), index = X_test.index)
-        
-    return X_train_bow, X_test_bow, X_train_bigram_corpus_tokenized, X_train_bigram_corpus, dct
+def create_gensim_dictionaries(X_train, X_test, no_below = 5, no_above = 0.95, n_gram_depth = 2):
+    texts = []
+    phrasers = []
+    corpora = []
+    dictionaries = []
+    X_train_bows_sparse = []
+    X_test_bows_sparse = []
+    
+    X_train_copy = X_train.copy()
+    X_test_copy = X_test.copy()
+    
+    for i in range(2, n_gram_depth + 1):
+        with parallel_backend('loky', n_jobs = -1):
+            text = list(X_train_copy.lyrics.apply(lambda x: list(x)).values)
+            phraser = Phrases(text)
+            phrasers.append(phraser)
+            X_train_copy.lyrics = X_train_copy.lyrics.apply(lambda x: phraser[x])
+            text = list(X_train_copy.lyrics.apply(lambda x: list(x)).values)
+            texts.append(text)
+            
+            dictionary = Dictionary(text)
+            dictionary.filter_extremes(no_below = no_below, no_above = no_above)
+            dictionaries.append(dictionary)
+            
+            corpus = [dictionary.doc2bow(x) for x in text]
+            corpora.append(corpus)
+
+    return texts, phrasers, corpora, dictionaries
+
+def obtain_gensim_sparse(X_train, X_test, text, phraser, corpus, dictionary):
+    X_train_copy_ngrams = X_train.copy().lyrics.apply(lambda x: phraser[x])
+    X_train_copy_text = list(X_train_copy_ngrams.apply(lambda x: list(x)).values)
+    X_train_copy_corpus = [dictionary.doc2bow(x) for x in X_train_copy_text]
+    X_train_sparse = corpus2csc(X_train_copy_corpus, num_terms = len(dictionary.token2id))
+    
+    X_test_copy_ngrams = X_test.copy().lyrics.apply(lambda x: phraser[x])
+    X_test_copy_text = list(X_test_copy_ngrams.apply(lambda x: list(x)).values)
+    X_test_copy_corpus = [dictionary.doc2bow(x) for x in X_test_copy_text]
+    X_test_sparse = corpus2csc(X_test_copy_corpus, num_terms = len(dictionary.token2id))
+    
+    
+    return X_train_sparse, X_test_sparse
 
 def obtain_sklearn_bag_of_words(X_train, X_test, vectorizer, vectorizer_args = None):
     vtr = vectorizer
