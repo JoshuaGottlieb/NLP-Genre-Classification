@@ -7,6 +7,7 @@ import gensim.models.phrases
 from gensim.matutils import corpus2dense, corpus2csc, Sparse2Corpus
 from gensim.corpora.dictionary import Dictionary
 from gensim.models.phrases import Phrases
+import gensim.downloader
 from gensim.models import Nmf
 from gensim.models.ldamodel import LdaModel
 from gensim.models.coherencemodel import CoherenceModel
@@ -224,3 +225,54 @@ def perform_tsne_analysis(X_train, X_test, y_train, y_test, random_state = 42, l
                     pickle.dump(tsne_trans, f)
                     
     return tsne_trans
+
+def get_vector_from_pretrained(row, model_vectors):
+    '''
+    Helper function to transform a row in a dataframe to a gensim Word2Vec pretrained encoding averaged vector.
+    Returns a vector representing the average weights of all vectorized tokens in the row.
+    
+    row: Row containing a list of strings representing the tokens to be transformed.
+    model_vectors: Gensim KeyedVectors object with vector representations of a pretrained corpus.
+    '''
+    
+    # Initialize list of vectors
+    vectors = []
+    # For each token, try to get the vector representation.
+    # If the vector representation does not exist, create a zero vector of appropriate size.
+    for x in row:
+        try:
+            vector = model_vectors.get_vector(x, norm = True)
+        except:
+            vector = np.zeros(model_vectors.vector_size)
+        vectors.append(vector)
+    return np.array(vectors).mean(axis = 0)
+
+def get_averaged_pretrained_vectors(X_train, X_test, model_string):
+    '''
+    Creates a vectorized document representation as the average of all vectorized tokens in the document based
+    on vector representations learned from a pretrained gensim KeyedVectors object.
+    Returns a dataframe representing the transformed corpus.
+    
+    X_train: Training dataframe to transform.
+    X_test: Test dataframe to transform.
+    model_string: A string representing a gensim pretrained model.
+    '''
+    
+    X_train_copy = X_train.copy()
+    X_test_copy = X_test.copy()
+    
+    with parallel_backend('loky', n_jobs = -1):
+        # First, download and load the pretrained gensim model
+        model_vectors = gensim.downloader.load(model_string)
+        # Create column labels to match the dimensionality of the vectors output by the pretrained model
+        x_col = ['x_{}'.format(i) for i in range(model_vectors.vector_size)]
+
+        # Vectorize each row - each row contains a list representing the averaged vector of the document
+        X_train_copy.lyrics = X_train_copy.lyrics.apply(lambda x: get_vector_from_pretrained(x, model_vectors))
+        X_test_copy.lyrics = X_test_copy.lyrics.apply(lambda x :get_vector_from_pretrained(x, model_vectors))
+        # Create a new dataframe, expanding the vector as the columns of the new dataframe
+        # Features are columns, rows are documents
+        X_train_vectorized = pd.DataFrame(X_train_copy.lyrics.tolist(), columns = x_col, index = X_train_copy.index)
+        X_test_vectorized = pd.DataFrame(X_test_copy.lyrics.tolist(), columns = x_col, index = X_test_copy.index)
+    
+    return X_train_vectorized, X_test_vectorized
