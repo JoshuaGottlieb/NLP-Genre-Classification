@@ -7,6 +7,8 @@ import spacy
 def extract_lyrics(file):
     '''
     Extracts the lyrics from specified file, returns a Pandas dataframe containing lyric and artist information.
+    
+    file: String, file location to extract lyrics from.
     '''
     
     # Read file
@@ -28,7 +30,8 @@ def extract_lyrics(file):
 def spacy_lemmatizer(text, nlp):
     '''
     Helper function to lemmatize tokens based on spaCy lemmatization.
-    text: A list containing the tokens to lemmatize.
+    
+    text: List, contains tokens to lemmatize.
     nlp: A spaCy nlp object.
     '''
     
@@ -43,8 +46,8 @@ def process_lyrics(df, min_valid_tokens = 15):
     Processes the lyrics, removing scraping artifacts, non-alphabetic characters, and stopwords.
     Lemmatizes and tokenizes each document, returning the processed lyrics dataframe.
     
-    df: A pandas dataframe where each record consists of a single song. Must have column labeled lyrics.
-    min_valid_tokens: An optional integer to specify the minimum number of tokens needed to be considered a valid document.
+    df: DataFrame, where each record consists of a single song. Must have column labeled lyrics.
+    min_valid_tokens: Integer, to specify the minimum number of tokens needed to be considered a valid document.
                       Default 15.
     '''
     
@@ -80,8 +83,9 @@ def process_lyrics(df, min_valid_tokens = 15):
 def extract_and_process_lyrics(files, min_valid_tokens = 15):
     '''
     Helper function to extract lyrics and process lyrics from a given set of files. Returns the processed lyrics dataframe.
-    files: A string representing a file or a list of strings representing a set of files to extract lyrics from.
-    min_valid_tokens: An optional integer to specify the minimum number of tokens needed to be considered a valid document.
+    
+    files: String or list of strings, representing a file or a list of files to extract lyrics from.
+    min_valid_tokens: Integer, to specify the minimum number of tokens needed to be considered a valid document.
                       Passed on to the process_lyrics function. Default 15.
     '''
     
@@ -103,8 +107,9 @@ def extract_and_process_lyrics(files, min_valid_tokens = 15):
 def stitch_lyrics_and_metadata_frames(lyrics_df, metadata_df):
     '''
     Helper function to stitch a lyrics dataframe and a metadata dataframe together.
-    lyrics_df: A Pandas dataframe consisting of records containing lyrics, title_name, and artist_name columns
-    metadata_df: A Pandas dataframe consisting of records containing title_name and artist_name columns, at minimum
+    
+    lyrics_df: DataFrame, consisting of records containing lyrics, title_name, and artist_name columns.
+    metadata_df: DataFrame, consisting of records containing title_name and artist_name columns, at minimum.
     '''
     
     # Merge frames on mutual keys, keeping only matches. Drop unnecessary columns.
@@ -116,10 +121,11 @@ def process_data(lyric_files, metadata_file, dest_file, min_valid_tokens = 15):
     '''
     A function which performs the entire preprocessing steps for the NLP task.
     Writes a parquet file containing the merged dataframe and returns the merged dataframe.
-    lyric_files: A string or list of strings denoting the file(s) containing lyric information.
-    metadata_file: A string denoting the file containing metadata information.
-    dest_file: A string denoting the destination to write the resultant parquet file to.
-    min_valid_tokens: An optional integer to specify the minimum number of tokens needed to be considered a valid document.
+    
+    lyric_files: String or list of strings, denoting the file(s) containing lyric information.
+    metadata_file: String, denoting the file containing metadata information.
+    dest_file: String, denoting the destination to write the resultant parquet file to.
+    min_valid_tokens: Integer, to specify the minimum number of tokens needed to be considered a valid document.
                       Passed on to the extract_and_process_lyrics function. Default 15.
     '''
     

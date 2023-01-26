@@ -1,26 +1,23 @@
-import requests
 import numpy as np
 import pandas as pd
-import json
-import Keys
-import time
-import pickle
-import re
-from lyricsgenius import Genius
+import requests
 from bs4 import BeautifulSoup
+import time
+import re
+import pickle
 
 def get_musix_genres(key):
     '''
     Accesses the musiXmatch API using the given API key to obtain a list of all genres
     present in musiXmatch's song database.
+    
+    key: String, representing the API key to use.
     '''
     
     # Set up url and html parameters
     url = 'https://api.musixmatch.com/ws/1.1/'
     sub_url = 'music.genres.get'
-    params = {
-        'apikey': key
-    }
+    params = {'apikey': key}
     
     # Make the request
     musix_genres_json = requests.get(url + sub_url, params = params).json()['message']['body']['music_genre_list']
@@ -38,10 +35,11 @@ def get_musix_genres(key):
 def get_musix_track_info_by_genre(genres, key, file, id_limit = 5000):
     '''
     Retrieves song metadata from the musiXmatch API based off of genre.
-    genres: A list of strings representing the genres to retreive from the musiXmatch API.
-    key: A string representing the musiXmatch API key to use.
-    file: A string representing the file destination where the retrieved data will be written to.
-    id_limit: An integer representing the maximum number of records to pull for each genre from the API.
+    
+    genres: List of strings, representing the genres to retreive from the musiXmatch API.
+    key: String, representing the musiXmatch API key to use.
+    file: String, representing the file destination where the retrieved data will be written to.
+    id_limit: Integer, representing the maximum number of records to pull for each genre from the API.
               Will default to the lower of the maximum number of attainable records for the genre or the id_limit.
               Default: 5000
     '''
@@ -101,6 +99,8 @@ def clean_titles(original_df):
     '''
     Takes in a Pandas dataframe with a column named title_name, then performs cleaning on the title.
     Returns a new Pandas dataframe with an additional column named clean_title.
+    
+    original_df: DataFrame, containing column title_name consisting of strings.
     '''
     
     
@@ -135,9 +135,10 @@ def clean_titles(original_df):
 def scrape_songlyrics(df, file, title_key = 'title_name'):
     '''
     Scrapes songlyrics.com for song lyrics.
-    df: A Pandas dataframe containing song metadata, including at minimum columns title_name and artist_name.
-    file: A string representing the file location to write scraped data to.
-    title_key: An optional string to represent the column to be used for scraping data.
+    
+    df: DataFrame, containing song metadata, including at minimum columns title_name and artist_name.
+    file: String, representing the file location to write scraped data to.
+    title_key: String, to represent the column to be used for scraping data. Defaults to title_name.
     '''
     
     # Define base url and url ending for each webscraping attempt
@@ -179,6 +180,5 @@ def scrape_songlyrics(df, file, title_key = 'title_name'):
             print('Writing lyrics for {} by {} to {}'.format(title, artist, file))
             with open(file, 'a') as f:
                 f.write('{}|{}|{}|{}\n'.format(lyrics, title_raw, artist, title))
-        
         
     return
