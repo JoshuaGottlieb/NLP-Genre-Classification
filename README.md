@@ -55,7 +55,7 @@ Before throwing the data into some models, I decided to do some topic modeling t
 
 As can be seen, the coherence scores are highest at 8 topics. Throwing this model into pyLDAvis gives:
 
-![](./visualizations/pyLDAvis/pyLDAvis_8.html)
+<iframe src = './visualizations/pyLDAvis/pyLDAvis_8.html'></iframe>
 
 | TSNE Gensim 4-Gram Encoded Train Set Ground-Truth Labels   |
 | :--------------------------------------------------------: |
