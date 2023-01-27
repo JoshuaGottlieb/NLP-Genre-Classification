@@ -53,14 +53,21 @@ Before throwing the data into some models, I decided to do some topic modeling t
 | :--------------------------------------------------------: |
 | ![](./visualizations/coherences.png)                       |
 
-As can be seen, the coherence scores are highest at 8 topics. Throwing this model into pyLDAvis gives:
+As can be seen, the coherence scores are highest at 8 topics, a different number than the 10 genres remaining in our dataset.
 
-<iframe src = './visualizations/pyLDAvis/pyLDAvis_8.html'></iframe>
+| pyLDAvis for LDA on Gensim Bigrams with 8 Topics           |
+| :--------------------------------------------------------: |
+| ![](./visualizations/pyLDAvis_lda_8_topics.png)            |
+
+The result of the 8 topic LDA model creates clear clusters representing Christian Gospel (topic 7), Death/Black Metal (topic 5), and Reggae (topic 8), but the rest of the topics are not clearly identifiable as any particular genre and contain generic words that could be in anything. In addition, topic 4 is completely contained in topic 2, meaning that we might have sub-genres instead of distinct genres. This is an indication that our genres might not be very separable.
+
+Next, I performed a TSNE analysis to see how clumped the data was.
 
 | TSNE Gensim 4-Gram Encoded Train Set Ground-Truth Labels   |
 | :--------------------------------------------------------: |
 | ![](./visualizations/TSNE_gensim_4gram_train.png)          |
 
+This matches with the results seen in the pyLDAvis results - there is a cluster on the left for Christian Gospel, a cluster in the middle for Death/Black Metal, and a cluster on the right for Reggae, but everything else is jumbled together with no clear separation. We should expect poor results from our models.
 
 
 ## Results
