@@ -122,65 +122,30 @@ For any additional questions, please contact: **Joshua Gottlieb (joshuadavidgott
 ```
 ├── README.md                               <- The top-level README for reviewers of this project   
 ├── .gitignore                              <- Hidden file specifying which files to ignore
-├── data                                    <- Folder containing external and code-generated data
-│   ├── cleaned                             <- Folder containing cleaned data used by notebooks
-│   │   ├── binary_class_data.parquet
-│   │   ├── multi_class_data.parquet
-│   │   ├── test_binary.parquet
-│   │   ├── test_multi.parquet
-│   │   ├── train_binary.parquet
-│   │   └── train_multi.parquet
-│   ├── models                              <- Folder containing pickled fitted models
-│   │   ├── binary
-│   │   │   ├── binary_adaboost.pickle
-│   │   │   ├── binary_base_logistic.pickle
-│   │   │   ├── binary_gradientboost.pickle
-│   │   │   ├── binary_kneighbors.pickle
-│   │   │   ├── binary_logistic.pickle
-│   │   │   ├── binary_random_forest.pickle
-│   │   │   ├── binary_tree.pickle
-│   │   │   ├── binary_xgboost_class_0_recall.pickle
-│   │   │   └── binary_xgboost.pickle
-│   │   └── multi
-│   │       ├── multi_adaboost.pickle
-│   │       ├── multi_base_tree.pickle
-│   │       ├── multi_gradientboost.pickle
-│   │       ├── multi_kneighbors.pickle
-│   │       ├── multi_random_forest.pickle
-│   │       ├── multi_tree.pickle
-│   │       ├── multi_xgboost_class_0_recall.pickle
-│   │       └── multi_xgboost.pickle
-│   └── raw                                    <- Folder containing raw files used by Data-Cleaning notebook
-│       ├── column_names.md
-│       ├── kepler_cumulative.csv
-│       └── kepler_cumulative.csv.zip
-├── notebooks                                  <- Folder containing Jupyter notebooks with project code
-│   ├── Data-Cleaning.ipynb
+├── notebooks                               <- Folder containing Jupyter notebooks with project code
 │   ├── Data-Collection.ipynb
-│   ├── EDA-and-Feature-Engineering.ipynb
+│   ├── Data-Cleaning-and-Text-Preprocessing.ipynb
+│   ├── EDA.ipynb
 │   ├── Modeling.ipynb
-│   ├── packages                               <- Subfolder containing methods used between notebooks
+│   ├── Visualizations.ipynb
+│   ├── project_functions                   <- Subfolder acting as Python module holding submodules with functions
+│   │   ├── data_cleaning.py
+│   │   ├── EDA.py
 │   │   ├── __init__.py
-│   │   ├── model_evaluation.py
-│   └── Visualizations.ipynb
-├── images                                     <- Folder containing images generated from code and from external sources
-│   ├── angular_offset_sky_boxplots.png
-│   ├── base_binary_class_report.png
-│   ├── base_binary_confusion_matrix.png
-│   ├── base_multi_class_report.png
-│   ├── base_multi_confusion_matrix.png
-│   ├── best_binary_class_report.png
-│   ├── best_binary_confusion_matrix.png
-│   ├── best_binary_feature_importances.png
-│   ├── best_multi_class_report.png
-│   ├── best_multi_confusion_matrix.png
-│   ├── best_multi_feature_importances.png
-│   ├── max_multi_event_stat_boxplots.png
-│   ├── orbital_period_boxplots.png
-│   ├── orbit_semimajor_axis_boxplots.png
-│   ├── planet_star_radius_ratio_boxplots.png
-│   ├── transit_depth_boxplots.png
-│   └── transit_method.png
-├── presentation                               <- Folder containing PDF of presentation
-│   └── Identifying_Exoplanets_Using_Machine_Learning.pdf
+│   │   ├── modeling.py
+│   │   ├── scraping.py
+│   │   ├── utils.py
+│   │   └── visualizations.py
+│   └── Keys.py                             <- Python file ignored by .gitignore holding API keys
+├── data                                    <- Folder containing external and code-generated data
+│   ├── raw                                 <- Subfolder containing raw data pulled from APIs and webscraping
+│   ├── cleaned                             <- Subfolder containing cleaned data used by notebooks
+│   │   ├── test                            <- Subfolder containing test data
+│   │   └── train                           <- Subfolder containing train data
+│   ├── gensim                              <- Subfolder containing pickled fitted gensim objects such as dictionaries
+│   ├── models                              <- Subfolder containing pickled fitted models
+│   └── tsne                                <- Subfolder containing pickled dataframes containing TSNE information
+├── presentation                            <- Folder containing PDF of presentation
+└── visualizations                          <- Folder containing PDF of presentation
+    └── pyLDAvis                            <- Subfolder containing saved html files of pyLDAvis objects
 ```
