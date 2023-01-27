@@ -27,32 +27,59 @@ All song metadata (title, artist, album, and genre) were pulled from [musiXmatch
     <li> Reggae </li>
 </ul>
 
-These genres were picked somewhat arbitrarily. I inspected the available genres from musiXmatch, as well as the genres/subgenres with large amounts of data available, and these genres were the ones which stood out the most. It should be noted that Christian Gospel contained Christian Rock underneath it, which is closer to the various rock genres than to gospel music, as far as I am concerned. I also did not apply any rules to prevent the acquisition of duplicates, if they appeared in multiple genres. The musiXmatch API has a strict limit of ~2,000 calls per day, meaning it took about 6 days the desired data.
+These genres were picked somewhat arbitrarily. I inspected the available genres from musiXmatch, as well as the genres/subgenres with large amounts of data available, and these genres were the ones which stood out the most. It should be noted that Christian Gospel contained Christian Rock underneath it, which is closer to the various rock genres than to gospel music, as far as I am concerned. I also did not apply any rules to prevent the acquisition of duplicates, if they appeared in multiple genres. The musiXmatch API has a limit of about 2,000 calls per day, meaning it took about 6 days the desired data.
 
-Lyrics were scraped from [SongLyrics](https://www.songlyrics.com/) using requests and BeautifulSoup. Lyrics data was then stitched with the song metadata using artist/title pairs as the join keys, in preparation for cleaning. It should be noted that even when running the scraping operation on two machines simultaneously, it took roughly 3 days to scrape the data, due to interruptions caused by bad URL construction due to song titles that were formatted in an irregular manner. All raw data can be found in zipped format in [./data/raw].
+Lyrics were scraped from [SongLyrics](https://www.songlyrics.com/) using [requests](https://requests.readthedocs.io/en/latest/) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/). Lyrics data was then stitched with the song metadata using artist/title pairs as the join keys, in preparation for cleaning. It should be noted that even when running the scraping operation on two machines simultaneously, it took roughly 3 days to scrape the data, due to interruptions caused by bad URL construction due to song titles that were formatted in an irregular manner. All raw data can be found in zipped format in [./data/raw].
 
 ## Data Cleaning
 
 Processing my scraped song lyrics (each song will be called a document and the entire list of documents will be referenced as a corpus for the rest of this README) required some effort and careful thought. First, I had to trim the corpus for actual text preprocessing. Some documents had errors from scraping, these were dropped. Each document was split into a list of strings for further preprocessing. Then, any documents which did not actually contain song lyrics were dropped, which was possible since songlyrics.com has specific wording for songs for which they do not have lyrics.
 
-Further preprocessing involved using a series of RegEx transformations to remove leading phrases that were scraping artifacts, remove all non-alphabetic characters, remove all words (henceforth referred to as tokens) of 2 or fewer characters, and strip white spaces. Stop words from [NLTK's stopword list](https://pythonspot.com/nltk-stop-words/) were removed, and each document was converted to a list of tokens. Finally, each token was then lemmatized using [spaCy's core English pipeline](https://spacy.io/models/en). To see the full list of transformations used, see [./notebooks/scraping.py].
+Further preprocessing involved using a series of [RegEx](https://docs.python.org/3/library/re.html) transformations to remove leading phrases that were scraping artifacts, remove all non-alphabetic characters, remove all words (henceforth referred to as tokens) of 2 or fewer characters, and strip white spaces. Stop words from [NLTK's stopword list](https://pythonspot.com/nltk-stop-words/) were removed, and each document was converted to a list of tokens. Finally, each token was then lemmatized using [spaCy's core English pipeline](https://spacy.io/models/en). To see the full list of transformations used, see [the scraping module](./notebooks/project_functions/scraping.py).
 
 After cleaning, duplicates were dropped, and all records for Hip Hop/Rap and R&B/Soul were dropped, as each genre had fewer than 3000 documents. The document distribution after cleaning was as follows:
 
-| Genre Count                         |
-| :---------------------------------: |
-| ![./visualizations/genre_count.png] |
+| Genre Count                           |
+| :-----------------------------------: |
+| ![](./visualizations/genre_count.png) |
 
-To be used in models and other tests, it is necessary to vectorize each document in my corpus. I used a variety of different vectorization methods, including [SkLearn's CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html), n-gram encoding using [gensim's Phraser](https://radimrehurek.com/gensim/models/phrases.html), and averaged neural network encoding using [word2vec and glove](https://radimrehurek.com/gensim/models/word2vec.html), both from gensim. Note that I did train a neural network myself, and so I simply used the pretrained models to vectorize each token, then averaged all tokens in the document to get vectorized documents, which is not the best method for using these pretrained neural networks but was something I could use in a shallow learning model.
+To be used in models and other tests, it is necessary to vectorize each document in my corpus. I used a variety of different vectorization methods, including [SkLearn's CountVectorizer](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html), n-gram encoding using [gensim's Phraser](https://radimrehurek.com/gensim/models/phrases.html), and averaged neural network encoding using [word2vec and glove](https://radimrehurek.com/gensim/models/word2vec.html) also from gensim. Note that I did not train a neural network myself, and so I simply used the pretrained models to vectorize each token, then averaged all tokens in the document to get vectorized documents, which is not the best method for using these pretrained neural networks but was something I could use in a shallow learning model.
 
 ## Topic Modeling and Data Exploration
 
+Before throwing the data into some models, I decided to do some topic modeling to see if there was a natural representation of the genres that was different than the current labels that exist in my data set. Below are the results of the coherence score analysis that was performed.
+
+| LDA Coherence Scores Across N-Topics                       |
+| :--------------------------------------------------------: |
+| ![](./visualizations/coherences.png)                       |
+
+As can be seen, the coherence scores are highest at 8 topics. Throwing this model into pyLDAvis gives:
+
+![](./visualizations/pyLDAvis/pyLDAvis_8.html)
+
+| TSNE Gensim 4-Gram Encoded Train Set Ground-Truth Labels   |
+| :--------------------------------------------------------: |
+| ![](./visualizations/TSNE_gensim_4gram_train.png)          |
 
 
 
 ## Results
 
-![./visualizations/best_model_confusion_matrix.png]
+| Model Scores                                               |
+| :--------------------------------------------------------: |
+| ![](./visualizations/model_scores.png)                     |
+
+| Best Model Confusion Matrix                                |
+| :--------------------------------------------------------: |
+| ![](./visualizations/best_model_confusion_matrix.png)      |
+
+| Best Model Classification Report                           |
+| :--------------------------------------------------------: |
+| ![](./visualizations/best_model_classification_report.png) |
+
+| TSNE Gensim 4-Gram Encoded Documents Test Predictions      |
+| :--------------------------------------------------------: |
+| ![](./visualizations/TSNE_gensim_4gram_test.png)           |
 
 ## Conclusions
 
@@ -69,7 +96,7 @@ Next steps include:
 
 ## For More Information
 
-Please look at my full analysis in [Jupyter Notebooks](./notebooks) or in my [presentation](./presentation/Identifying_Exoplanets_Using_Machine_Learning.pdf).
+Please look at my full analysis in [Jupyter Notebooks](./notebooks), or in my [presentation](./presentation/Identifying_Exoplanets_Using_Machine_Learning.pdf), and code in the [Project Modules](./notebooks/project_functions).
 
 For any additional questions, please contact: **Joshua Gottlieb (joshuadavidgottlieb@gmail.com)**
 
